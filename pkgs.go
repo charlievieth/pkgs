@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"git.vieth.io/buildutil"
+	"github.com/charlievieth/buildutil"
 )
 
 type Pkg struct {
