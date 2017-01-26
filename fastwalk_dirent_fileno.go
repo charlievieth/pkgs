@@ -4,7 +4,7 @@
 
 // +build freebsd openbsd netbsd
 
-package main
+package pkgs
 
 import "syscall"
 

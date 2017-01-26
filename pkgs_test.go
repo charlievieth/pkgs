@@ -1,32 +1,20 @@
-package main
+package pkgs
 
 import (
-	"path/filepath"
-	"runtime"
+	"go/build"
+	"os"
 	"testing"
 )
 
-func BenchmarkFastwalk(b *testing.B) {
-	srcDir := filepath.Join(runtime.GOROOT(), "src")
-	for i := 0; i < b.N; i++ {
-		w := Walker{
-			srcDir: srcDir,
-			pkgs:   make(map[string]*Pkg),
-		}
-		if err := fastWalk(w.srcDir, w.Walk); err != nil {
-			b.Fatal(err)
-		}
+func BenchmarkImport(b *testing.B) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		b.Fatal(err)
 	}
-}
-
-func BenchmarkFastwalk_X(b *testing.B) {
-	srcDir := filepath.Join(runtime.GOROOT(), "src")
-	w := Walker{
-		srcDir: srcDir,
-		pkgs:   make(map[string]*Pkg),
-	}
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := fastWalk(w.srcDir, w.Walk); err != nil {
+		_, err := Walk(&build.Default, pwd)
+		if err != nil {
 			b.Fatal(err)
 		}
 	}

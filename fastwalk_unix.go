@@ -4,7 +4,7 @@
 
 // +build linux,!appengine darwin freebsd openbsd netbsd
 
-package main
+package pkgs
 
 import (
 	"bytes"
@@ -20,12 +20,11 @@ const blockSize = 8 << 10
 // value used to represent a syscall.DT_UNKNOWN Dirent.Type.
 const unknownFileMode os.FileMode = os.ModeNamedPipe | os.ModeSocket | os.ModeDevice
 
-func readDir(dirName string, fn func(dirName, entName string, typ os.FileMode) error) error {
+func readDir(dirName string, fn func(dirName, entName string, typ os.FileMode) error) (rerr error) {
 	fd, err := syscall.Open(dirName, 0, 0)
 	if err != nil {
 		return err
 	}
-	defer syscall.Close(fd)
 
 	// The buffer must be at least a block long.
 	buf := make([]byte, blockSize) // stack-allocated; doesn't escape
@@ -36,10 +35,11 @@ func readDir(dirName string, fn func(dirName, entName string, typ os.FileMode) e
 			bufp = 0
 			nbuf, err = syscall.ReadDirent(fd, buf)
 			if err != nil {
-				return os.NewSyscallError("readdirent", err)
+				rerr = os.NewSyscallError("readdirent", err)
+				break
 			}
 			if nbuf <= 0 {
-				return nil
+				break
 			}
 		}
 		consumed, name, typ := parseDirEnt(buf[bufp:nbuf])
@@ -57,14 +57,18 @@ func readDir(dirName string, fn func(dirName, entName string, typ os.FileMode) e
 				if os.IsNotExist(err) {
 					continue
 				}
-				return err
+				rerr = err
+				break
 			}
 			typ = fi.Mode() & os.ModeType
 		}
-		if err := fn(dirName, name, typ); err != nil {
-			return err
+		if rerr = fn(dirName, name, typ); rerr != nil {
+			break
 		}
 	}
+	syscall.Close(fd)
+
+	return
 }
 
 func parseDirEnt(buf []byte) (consumed int, name string, typ os.FileMode) {

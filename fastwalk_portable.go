@@ -4,7 +4,7 @@
 
 // +build appengine !linux,!darwin,!freebsd,!openbsd,!netbsd
 
-package main
+package pkgs
 
 import (
 	"os"
