@@ -192,6 +192,33 @@ func vendorlessImportPath(ipath string) string {
 	return ipath
 }
 
+// var walkers map[string]*Walker
+// var walkersMu sync.RWMutex
+
+// func getWalker(srcDir string) (*Walker, error) {
+// 	walkersMu.RLock()
+// 	if walkers != nil {
+// 		if w := walkers[srcDir]; w != nil {
+// 			walkersMu.RUnlock()
+// 			return w, nil
+// 		}
+// 	}
+// 	walkersMu.RUnlock()
+
+// 	walkersMu.Lock()
+// 	if walkers == nil {
+// 		walkers = make(map[string]*Walker)
+// 	}
+// 	// re-check
+// 	if w := walkers[srcDir]; w != nil {
+// 		walkersMu.Unlock()
+// 		return w, nil
+// 	}
+// 	w, err := newWalker(importDir, srcDir, ctxt)
+// 	walkersMu.Unlock()
+// 	return w, err
+// }
+
 func Walk(ctxt *build.Context, importDir string) ([]string, error) {
 	var first error
 	var paths []string
