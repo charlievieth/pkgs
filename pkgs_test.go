@@ -11,9 +11,10 @@ func BenchmarkImport(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
+	ctxt := build.Default
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := Walk(&build.Default, pwd)
+		_, err := Walk(&ctxt, pwd)
 		if err != nil {
 			b.Fatal(err)
 		}
