@@ -12,7 +12,7 @@
 //
 // See golang.org/issue/16399
 
-package pkgs
+package fastwalk
 
 import (
 	"errors"
@@ -21,13 +21,13 @@ import (
 	"runtime"
 )
 
-// traverseLink is a sentinel error for fastWalk, similar to filepath.SkipDir.
-var traverseLink = errors.New("traverse symlink, assuming target is a directory")
+// TraverseLink is a sentinel error for Walk, similar to filepath.SkipDir.
+var TraverseLink = errors.New("traverse symlink, assuming target is a directory")
 
-// fastWalk walks the file tree rooted at root, calling walkFn for
+// Walk walks the file tree rooted at root, calling walkFn for
 // each file or directory in the tree, including root.
 //
-// If fastWalk returns filepath.SkipDir, the directory is skipped.
+// If Walk returns filepath.SkipDir, the directory is skipped.
 //
 // Unlike filepath.Walk:
 //   * file stat calls must be done by the user.
@@ -35,10 +35,10 @@ var traverseLink = errors.New("traverse symlink, assuming target is a directory"
 //     any permission bits.
 //   * multiple goroutines stat the filesystem concurrently. The provided
 //     walkFn must be safe for concurrent use.
-//   * fastWalk can follow symlinks if walkFn returns the traverseLink
+//   * Walk can follow symlinks if walkFn returns the TraverseLink
 //     sentinel error. It is the walkFn's responsibility to prevent
-//     fastWalk from going into symlink cycles.
-func fastWalk(root string, walkFn func(path string, typ os.FileMode) error) error {
+//     Walk from going into symlink cycles.
+func Walk(root string, walkFn func(path string, typ os.FileMode) error) error {
 	// TODO(bradfitz): make numWorkers configurable? We used a
 	// minimum of 4 to give the kernel more info about multiple
 	// things we want, in hopes its I/O scheduling can take
@@ -117,7 +117,7 @@ func (w *walker) doWork() {
 type walker struct {
 	fn func(path string, typ os.FileMode) error
 
-	donec    chan struct{} // closed on fastWalk's return
+	donec    chan struct{} // closed on Walk's return
 	workc    chan walkItem // to workers
 	enqueuec chan walkItem // from workers
 	resc     chan error    // from workers
@@ -148,7 +148,7 @@ func (w *walker) onDirEnt(dirName, baseName string, typ os.FileMode) error {
 
 	err := w.fn(joined, typ)
 	if typ == os.ModeSymlink {
-		if err == traverseLink {
+		if err == TraverseLink {
 			// Set callbackDone so we don't call it twice for both the
 			// symlink-as-symlink and the symlink-as-directory later:
 			w.enqueue(walkItem{dir: joined, callbackDone: true})
@@ -174,28 +174,4 @@ func (w *walker) walk(root string, runUserCallback bool) error {
 	}
 
 	return readDir(root, w.onDirEnt)
-}
-
-var evilHardcodedIgnores = [...]string{
-	".",
-	"..",
-	".git",
-	".hg",
-	".svn",
-}
-
-func ignoredName(name string) bool {
-	if len(name) == 0 || name[0] != '.' {
-		return len(name) == 0 // ignore zero-lenght names
-	}
-	i, j := 0, len(evilHardcodedIgnores)
-	for i < j {
-		h := i + (j-i)/2
-		if evilHardcodedIgnores[h] < name {
-			i = h + 1
-		} else {
-			j = h
-		}
-	}
-	return i < len(evilHardcodedIgnores) && evilHardcodedIgnores[i] == name
 }

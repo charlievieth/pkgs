@@ -4,7 +4,7 @@
 
 // +build linux,!appengine darwin
 
-package pkgs
+package fastwalk
 
 import "syscall"
 

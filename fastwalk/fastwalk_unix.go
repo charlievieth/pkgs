@@ -4,7 +4,7 @@
 
 // +build linux,!appengine darwin freebsd openbsd netbsd
 
-package pkgs
+package fastwalk
 
 import (
 	"bytes"

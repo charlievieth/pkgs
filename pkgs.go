@@ -9,7 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"git.vieth.io/buildutil"
+	"github.com/charlievieth/buildutil"
+	"github.com/charlievieth/pkgs/fastwalk"
 )
 
 type Pkg struct {
@@ -17,7 +18,7 @@ type Pkg struct {
 	ImportPath string // pkg import path ("net/http", "foo/bar/vendor/a/b")
 }
 
-type Walker struct {
+type walker struct {
 	importDir string
 	srcDir    string
 	pkgDir    string
@@ -26,7 +27,7 @@ type Walker struct {
 	mu        sync.RWMutex
 }
 
-func newWalker(importDir, srcDir string, ctxt *build.Context) (*Walker, error) {
+func newWalker(importDir, srcDir string, ctxt *build.Context) (*walker, error) {
 	var pkgtargetroot string
 	switch ctxt.Compiler {
 	case "gccgo":
@@ -43,7 +44,7 @@ func newWalker(importDir, srcDir string, ctxt *build.Context) (*Walker, error) {
 	if importDir != "" {
 		importDir = filepath.Clean(importDir)
 	}
-	w := &Walker{
+	w := &walker{
 		importDir: importDir,
 		srcDir:    filepath.ToSlash(srcDir),
 		pkgDir:    filepath.ToSlash(pkgDir),
@@ -53,21 +54,21 @@ func newWalker(importDir, srcDir string, ctxt *build.Context) (*Walker, error) {
 	return w, nil
 }
 
-func (w *Walker) Update() error {
+func (w *walker) Update() error {
 	// TODO: Add 'AllowBinary' mode so that pkgs are not
 	// included if the source code has been deleted.
 	if w.pkgDir != "" && !strings.HasPrefix(w.srcDir, w.ctxt.GOROOT) {
-		if err := fastWalk(w.pkgDir, w.walkPkg); err != nil {
+		if err := fastwalk.Walk(w.pkgDir, w.walkPkg); err != nil {
 			return err
 		}
 	}
-	if err := fastWalk(w.srcDir, w.walk); err != nil {
+	if err := fastwalk.Walk(w.srcDir, w.walk); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (w *Walker) seen(dirname string) (ok bool) {
+func (w *walker) seen(dirname string) (ok bool) {
 	w.mu.RLock()
 	if w.pkgs != nil {
 		_, ok = w.pkgs[dirname]
@@ -76,12 +77,12 @@ func (w *Walker) seen(dirname string) (ok bool) {
 	return
 }
 
-func (w *Walker) skipDir(path, base string) bool {
+func (w *walker) skipDir(path, base string) bool {
 	return w.importDir != "" && (base == "vendor" || base == "internal") &&
 		!strings.HasPrefix(path, w.importDir)
 }
 
-func (w *Walker) walkPkg(path string, typ os.FileMode) error {
+func (w *walker) walkPkg(path string, typ os.FileMode) error {
 	if typ.IsRegular() {
 		if !strings.HasSuffix(path, ".a") {
 			return nil
@@ -119,7 +120,7 @@ func (w *Walker) walkPkg(path string, typ os.FileMode) error {
 	return nil
 }
 
-func (w *Walker) walk(path string, typ os.FileMode) error {
+func (w *walker) walk(path string, typ os.FileMode) error {
 	dir := filepath.Dir(path)
 	if typ.IsRegular() {
 		if dir == w.srcDir || !strings.HasSuffix(path, ".go") ||
@@ -172,7 +173,7 @@ func (w *Walker) walk(path string, typ os.FileMode) error {
 			return nil
 		}
 		if shouldTraverse(dir, fi) {
-			return traverseLink
+			return fastwalk.TraverseLink
 		}
 		return nil
 	}
