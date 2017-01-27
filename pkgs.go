@@ -14,7 +14,7 @@ import (
 
 type Pkg struct {
 	Name       string // package name
-	ImportPath string // full pkg import path ("net/http", "foo/bar/vendor/a/b")
+	ImportPath string // pkg import path ("net/http", "foo/bar/vendor/a/b")
 }
 
 type Walker struct {
