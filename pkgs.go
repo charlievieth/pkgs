@@ -5,7 +5,6 @@ import (
 	"go/build"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 
@@ -219,7 +218,6 @@ func Walk(ctxt *build.Context, importDir string) ([]string, error) {
 			}
 		}
 	}
-	sort.Sort(sort.StringSlice(paths))
 
 	return paths, first
 }
@@ -267,23 +265,3 @@ func shouldTraverse(dir string, fi os.FileInfo) bool {
 	visitedSymlinks.Unlock()
 	return true
 }
-
-// TODO (CEV): remove sort types if not used.
-
-// byImportPathShortLength sorts by the short import path length, breaking ties on the
-// import string itself.
-type byImportPathShortLength []string
-
-func (s byImportPathShortLength) Len() int { return len(s) }
-func (s byImportPathShortLength) Less(i, j int) bool {
-	vi, vj := s[i], s[j]
-	return len(vi) < len(vj) || (len(vi) == len(vj) && vi < vj)
-}
-func (s byImportPathShortLength) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-
-// byLength sorts by string length.
-type byLength []string
-
-func (s byLength) Len() int           { return len(s) }
-func (s byLength) Less(i, j int) bool { return len(s[i]) < len(s[j]) }
-func (s byLength) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
