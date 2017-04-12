@@ -156,10 +156,7 @@ func (w *walker) walk(path string, typ os.FileMode) error {
 		if w.skipDir(path, base) {
 			return filepath.SkipDir
 		}
-		fi, err := os.Lstat(path)
-		if err == nil && skipDir(fi) {
-			return filepath.SkipDir
-		}
+		// TODO (CEV): Check skipDir if implemented
 		return nil
 	}
 	if typ == os.ModeSymlink {
@@ -222,7 +219,7 @@ func Walk(ctxt *build.Context, importDir string) ([]string, error) {
 	return paths, first
 }
 
-// TODO: Implement
+// TODO: Implement or remove
 func skipDir(fi os.FileInfo) bool { return false }
 
 var visitedSymlinks struct {
