@@ -44,10 +44,21 @@ func Walk(root string, walkFn func(path string, typ os.FileMode) error) error {
 	// things we want, in hopes its I/O scheduling can take
 	// advantage of that. Hopefully most are in cache. Maybe 4 is
 	// even too low of a minimum. Profile more.
+	//
+	// CEV: More than 10 workers and performance degrades.
 	numWorkers := 4
 	if n := runtime.NumCPU(); n > numWorkers {
-		numWorkers = n
+		//
+		if n > 10 {
+			numWorkers = 10
+		} else {
+			numWorkers = n
+		}
 	}
+	return walkN(root, walkFn, numWorkers)
+}
+
+func walkN(root string, walkFn func(path string, typ os.FileMode) error, numWorkers int) error {
 	w := &walker{
 		fn:       walkFn,
 		enqueuec: make(chan walkItem, numWorkers), // buffered for performance
