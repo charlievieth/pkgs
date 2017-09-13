@@ -30,6 +30,7 @@ func readDir(dirName string, fn func(dirName, entName string, typ os.FileMode) e
 	buf := make([]byte, blockSize) // stack-allocated; doesn't escape
 	bufp := 0                      // starting read position in buf
 	nbuf := 0                      // end valid data in buf
+	skipFiles := false             // skip fn() on regular files
 	for {
 		if bufp >= nbuf {
 			bufp = 0
@@ -42,9 +43,9 @@ func readDir(dirName string, fn func(dirName, entName string, typ os.FileMode) e
 				break
 			}
 		}
-		consumed, name, typ := parseDirEnt(buf[bufp:nbuf])
+		consumed, name, typ := parseDirEnt(buf[bufp:nbuf], skipFiles)
 		bufp += consumed
-		if name == "" || name == "." || name == ".." {
+		if typ == modeSkip || name == "" || name == "." || name == ".." {
 			continue
 		}
 		// Fallback for filesystems (like old XFS) that don't
@@ -63,6 +64,11 @@ func readDir(dirName string, fn func(dirName, entName string, typ os.FileMode) e
 			typ = fi.Mode() & os.ModeType
 		}
 		if rerr = fn(dirName, name, typ); rerr != nil {
+			if rerr == SkipFiles {
+				rerr = nil
+				skipFiles = true
+				continue
+			}
 			break
 		}
 	}
@@ -71,7 +77,9 @@ func readDir(dirName string, fn func(dirName, entName string, typ os.FileMode) e
 	return
 }
 
-func parseDirEnt(buf []byte) (consumed int, name string, typ os.FileMode) {
+const modeSkip = 1<<32 - 1
+
+func parseDirEnt(buf []byte, skipFiles bool) (consumed int, name string, typ os.FileMode) {
 	// golang.org/issue/15653
 	dirent := (*syscall.Dirent)(unsafe.Pointer(&buf[0]))
 	if v := unsafe.Offsetof(dirent.Reclen) + unsafe.Sizeof(dirent.Reclen); uintptr(len(buf)) < v {
@@ -105,6 +113,10 @@ func parseDirEnt(buf []byte) (consumed int, name string, typ os.FileMode) {
 		// or something. Revisit if/when this package is moved outside
 		// of goimports. goimports only cares about regular files,
 		// symlinks, and directories.
+		return
+	}
+	if skipFiles && typ&os.ModeType == 0 {
+		typ = modeSkip
 		return
 	}
 

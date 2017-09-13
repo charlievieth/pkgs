@@ -24,6 +24,8 @@ import (
 // TraverseLink is a sentinel error for Walk, similar to filepath.SkipDir.
 var TraverseLink = errors.New("traverse symlink, assuming target is a directory")
 
+var SkipFiles = errors.New("skip files")
+
 // Walk walks the file tree rooted at root, calling walkFn for
 // each file or directory in the tree, including root.
 //

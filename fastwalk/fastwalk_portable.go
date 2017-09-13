@@ -21,8 +21,17 @@ func readDir(dirName string, fn func(dirName, entName string, typ os.FileMode) e
 	if err != nil {
 		return err
 	}
+	skipFiles := false
 	for _, fi := range fis {
-		if err := fn(dirName, fi.Name(), fi.Mode()&os.ModeType); err != nil {
+		typ := fi.Mode() & os.ModeType
+		if skipFiles && typ == 0 {
+			continue
+		}
+		if err := fn(dirName, fi.Name(), typ); err != nil {
+			if err == SkipFiles {
+				skipFiles = true
+				continue
+			}
 			return err
 		}
 	}
