@@ -199,15 +199,6 @@ func lastVendor(s string) int {
 		substr  = "/vendor/"
 		n       = len(substr)
 	)
-	if n == len(s) {
-		if substr == s {
-			return 0
-		}
-		return -1
-	}
-	if n > len(s) {
-		return -1
-	}
 	last := len(s) - n
 	var h uint32
 	for i := len(s) - 1; i >= last; i-- {
