@@ -17,16 +17,46 @@ type Pkg struct {
 	ImportPath string // pkg import path ("net/http", "foo/bar/vendor/a/b")
 }
 
+type ignore struct {
+	chars [255]bool
+	names map[string]bool
+}
+
+func newIgnore(list []string) *ignore {
+	var x ignore
+	if len(list) != 0 {
+		a := list[:0]
+		for _, s := range list {
+			if s = strings.TrimSpace(s); s != "" {
+				a = append(a, s)
+			}
+		}
+		for _, s := range a {
+			if x.names == nil {
+				x.names = make(map[string]bool, len(a))
+			}
+			x.chars[s[0]] = true
+			x.names[s] = true
+		}
+	}
+	return &x
+}
+
+func (x *ignore) Skip(name string) bool {
+	return x.names != nil && len(name) != 0 && x.chars[name[0]] && x.names[name]
+}
+
 type walker struct {
 	importDir string
 	srcDir    string
 	pkgDir    string
 	ctxt      *build.Context
 	pkgs      map[string]*Pkg // abs dir path => *pkg
+	ignore    *ignore
 	mu        sync.RWMutex
 }
 
-func newWalker(importDir, srcDir string, ctxt *build.Context) (*walker, error) {
+func newWalker(importDir, srcDir string, ignore []string, ctxt *build.Context) (*walker, error) {
 	var pkgtargetroot string
 	switch ctxt.Compiler {
 	case "gccgo":
@@ -49,6 +79,7 @@ func newWalker(importDir, srcDir string, ctxt *build.Context) (*walker, error) {
 		pkgDir:    toSlash(pkgDir),
 		ctxt:      ctxt,
 		pkgs:      make(map[string]*Pkg),
+		ignore:    newIgnore(ignore),
 	}
 	return w, nil
 }
@@ -77,7 +108,8 @@ func (w *walker) seen(dirname string) (ok bool) {
 }
 
 func (w *walker) skipDir(path, base string) bool {
-	return w.importDir != "" && (base == "vendor" || base == "internal") &&
+	return !w.ignore.Skip(base) && w.importDir != "" &&
+		(base == "vendor" || base == "internal") &&
 		!strings.HasPrefix(path, w.importDir)
 }
 
@@ -231,12 +263,22 @@ func vendorlessImportPath(ipath string) string {
 	return ipath
 }
 
+type Config struct {
+	Context *build.Context
+	Ignore  []string
+}
+
+func (c *Config) Walk(importDir string) ([]string, error) {
+
+	return nil, nil
+}
+
 func Walk(ctxt *build.Context, importDir string) ([]string, error) {
 	var first error
 	var paths []string
 	srcDirs := ctxt.SrcDirs()
 	for _, s := range srcDirs {
-		w, err := newWalker(importDir, s, ctxt)
+		w, err := newWalker(importDir, s, nil, ctxt)
 		if err != nil {
 			if first == nil {
 				first = err
