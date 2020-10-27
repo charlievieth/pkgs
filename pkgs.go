@@ -48,10 +48,10 @@ func newWalker(importDir, srcDir string, ctxt *build.Context) (*walker, error) {
 
 	// special vgo directories
 	ignored := map[string]struct{}{
-		filepath.Join(srcDir, "v"):   struct{}{},
-		filepath.Join(srcDir, "mod"): struct{}{},
-		filepath.Join(pkgDir, "v"):   struct{}{},
-		filepath.Join(pkgDir, "mod"): struct{}{},
+		filepath.Join(srcDir, "v"):   {},
+		filepath.Join(srcDir, "mod"): {},
+		filepath.Join(pkgDir, "v"):   {},
+		filepath.Join(pkgDir, "mod"): {},
 	}
 	w := &walker{
 		importDir: importDir,
