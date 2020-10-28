@@ -17,6 +17,98 @@ import (
 // 	2. parse the repos vendor/modules separately the
 // 	   any vendor/modules dir/file encountered.
 
+// Code for finding the root directory of a project
+//
+/*
+func IsRoot(dir string) bool {
+	// TODO: add ".svn" ".hg" ???
+	for _, name := range []string{"vendor", "go.mod", ".git"} {
+		if _, err := os.Lstat(dir + "/" + name); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func ProjectRoot(dirname string) string {
+	dir := filepath.ToSlash(dirname)
+	for !IsRoot(dir) {
+		next := filepath.Dir(dir)
+		if next == dir {
+			break
+		}
+		dir = next
+	}
+	return dir
+}
+
+func TrimPathPrefix(path, prefix string) (string, bool) {
+	if prefix == "" {
+		return "", false
+	}
+	if strings.HasPrefix(path, prefix) {
+		if filepath.Separator == '/' {
+			return strings.TrimLeft(strings.TrimPrefix(path, prefix), "/"), true
+		} else {
+			return strings.TrimLeft(strings.TrimPrefix(path, prefix), "/\\"), true
+		}
+	}
+
+	// try harder
+
+	var err error
+	path, err = filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", false
+	}
+	prefix, err = filepath.EvalSymlinks(prefix)
+	if err != nil {
+		return "", false
+	}
+	if strings.HasPrefix(path, prefix) {
+		if filepath.Separator == '/' {
+			// clean path, don't need to TrimLeft
+			return strings.TrimPrefix(strings.TrimPrefix(path, prefix), "/"), true
+		} else {
+			return strings.TrimLeft(strings.TrimPrefix(path, prefix), "/\\"), true
+		}
+	}
+	return "", false
+}
+
+func TrimRoot(ctx *build.Context, dirname string) (string, error) {
+	dirname = filepath.Clean(dirname)
+
+	paths := strings.Split(ctx.GOPATH, string(os.PathListSeparator))
+	for _, path := range paths {
+		path = filepath.Join(path, "src")
+		if p, ok := TrimPathPrefix(dirname, path); ok {
+			return p, nil
+		}
+	}
+
+	root := filepath.Join(ctx.GOROOT, "src")
+	if p, ok := TrimPathPrefix(dirname, root); ok {
+		return p, nil
+	}
+
+	return "", errors.New("WAT WAT WAT") // FIXME
+}
+
+func ProjectRoot_XX(ctx *build.Context, dirname string) string {
+	dir := filepath.ToSlash(dirname)
+
+	for !IsRoot(dir) {
+		next := filepath.Dir(dir)
+		if next == dir {
+			break
+		}
+		dir = next
+	}
+	return dir
+}
+*/
+
 type Pkg struct {
 	Name       string // package name
 	ImportPath string // pkg import path ("net/http", "foo/bar/vendor/a/b")
