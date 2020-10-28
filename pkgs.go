@@ -12,6 +12,11 @@ import (
 	"github.com/charlievieth/pkgs/fastwalk"
 )
 
+// TODO:
+// 	1. support modules with golang.org/x/mod/modfile
+// 	2. parse the repos vendor/modules separately the
+// 	   any vendor/modules dir/file encountered.
+
 type Pkg struct {
 	Name       string // package name
 	ImportPath string // pkg import path ("net/http", "foo/bar/vendor/a/b")
