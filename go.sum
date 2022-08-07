@@ -1,9 +1,12 @@
 github.com/charlievieth/buildutil v0.0.14 h1:hl+BEUVlgtfSmYL0WnqzZ04SEdoRM3fxh4B8cs2vuX8=
 github.com/charlievieth/buildutil v0.0.14/go.mod h1:DdeyrcvBqoVBAluu81KhpNLWO2M/SxrUB8KOc2SVo9s=
+github.com/charlievieth/fastwalk v1.0.1 h1:jW01w8OCFdKS9JvAcnI+JHhWU/FuIEmNb24Ri9p7OVg=
+github.com/charlievieth/fastwalk v1.0.1/go.mod h1:dryXgMJyGHbMrAmmnF0/EJNBbZaihlwcNud5IuGyogU=
 github.com/charlievieth/fs v0.0.3 h1:3lZQXTj4PbE81CVPwALSn+JoyCNXkZgORHN6h2XHGlg=
 github.com/charlievieth/fs v0.0.3/go.mod h1:hD4sRzto1Hw8zCua76tNVKZxaeZZr1RiKftjAJQRLLo=
 github.com/charlievieth/reonce v1.2.1 h1:V3Heg6/muvguQwFb+T02+NMrragkDy/DgTgH3Z6ogXc=
 github.com/charlievieth/reonce v1.2.1/go.mod h1:QswnAAn98PFvVf5MG10T4JSE8R3LbmapTruRdiCf7XM=
+github.com/karrick/godirwalk v1.17.0 h1:b4kY7nqDdioR/6qnbHQyDvmA17u5G1cZ6J+CZXwSWoI=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=

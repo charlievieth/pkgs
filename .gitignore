@@ -1,2 +1,3 @@
-pkgs
-pkgs.exe
+*.exe
+*.test
+/vendor

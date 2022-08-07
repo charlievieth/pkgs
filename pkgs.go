@@ -3,13 +3,14 @@ package pkgs
 import (
 	"fmt"
 	"go/build"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/charlievieth/buildutil"
-	"github.com/charlievieth/pkgs/fastwalk"
+	"github.com/charlievieth/fastwalk"
 )
 
 // TODO:
@@ -31,6 +32,17 @@ type walker struct {
 	mu        sync.RWMutex
 	// ignored directories (full path)
 	ignored map[string]struct{}
+}
+
+func isDir(ctxt *build.Context, name string) bool {
+	if name == "" {
+		return false
+	}
+	if ctxt.IsDir != nil {
+		return ctxt.IsDir(name)
+	}
+	fi, err := os.Stat(name)
+	return err == nil && fi.IsDir()
 }
 
 func newWalker(importDir, srcDir string, ctxt *build.Context) (*walker, error) {
@@ -72,12 +84,15 @@ func newWalker(importDir, srcDir string, ctxt *build.Context) (*walker, error) {
 func (w *walker) Update() error {
 	// TODO: Add 'AllowBinary' mode so that pkgs are not
 	// included if the source code has been deleted.
-	if w.pkgDir != "" && !strings.HasPrefix(w.srcDir, w.ctxt.GOROOT) {
-		if err := fastwalk.Walk(w.pkgDir, w.walkPkg); err != nil {
+	if isDir(w.ctxt, w.pkgDir) && !strings.HasPrefix(w.srcDir, w.ctxt.GOROOT) {
+		if err := fastwalk.Walk(nil, w.pkgDir, w.walkPkg); err != nil {
 			return err
 		}
 	}
-	if err := fastwalk.Walk(w.srcDir, w.walk); err != nil {
+	conf := fastwalk.Config{
+		Follow: true,
+	}
+	if err := fastwalk.Walk(&conf, w.srcDir, w.walk); err != nil {
 		return err
 	}
 	return nil
@@ -103,7 +118,12 @@ func skipDir(importDir, path, base string) bool {
 	return importDir == "" || !strings.HasPrefix(importDir, dir)
 }
 
-func (w *walker) walkPkg(path string, typ os.FileMode) error {
+// func(path string, d DirEntry, err error) error
+func (w *walker) walkPkg(path string, d fs.DirEntry, err error) error {
+	if err != nil {
+		return err
+	}
+	typ := d.Type()
 	if typ.IsRegular() {
 		if !strings.HasSuffix(path, ".a") {
 			return nil
@@ -128,17 +148,17 @@ func (w *walker) walkPkg(path string, typ os.FileMode) error {
 		return nil
 	}
 	if typ == os.ModeDir {
-		base := filepath.Base(path)
-		if base == "" || base[0] == '.' || base[0] == '_' ||
-			base == "testdata" || base == "node_modules" {
+		name := d.Name()
+		if name == "" || name[0] == '.' || name[0] == '_' ||
+			name == "testdata" || name == "node_modules" {
 			return filepath.SkipDir
 		}
-		if base == "v" || base == "mod" {
+		if name == "v" || name == "mod" {
 			if _, ok := w.ignored[path]; ok {
 				return filepath.SkipDir
 			}
 		}
-		if skipDir(w.importDir, path, base) {
+		if skipDir(w.importDir, path, name) {
 			return filepath.SkipDir
 		}
 		return nil
@@ -165,15 +185,19 @@ func toSlash(path string) string {
 	return string(buf)
 }
 
-func (w *walker) walk(path string, typ os.FileMode) error {
+func (w *walker) walk(path string, d fs.DirEntry, err error) error {
+	if err != nil {
+		return err
+	}
 	dir := filepath.Dir(path)
+	typ := d.Type()
 	if typ.IsRegular() {
 		if dir == w.srcDir || !strings.HasSuffix(path, ".go") ||
 			strings.HasSuffix(path, "_test.go") {
 			return nil
 		}
 		if w.seen(dir) {
-			return fastwalk.SkipFiles
+			return fastwalk.ErrSkipFiles
 		}
 		name, ok := buildutil.ShortImport(w.ctxt, path)
 		if !ok {
@@ -187,7 +211,7 @@ func (w *walker) walk(path string, typ os.FileMode) error {
 				ImportPath: importpath,
 			}
 			w.mu.Unlock()
-			return fastwalk.SkipFiles
+			return fastwalk.ErrSkipFiles
 		}
 		w.mu.Unlock()
 		return nil
@@ -198,6 +222,10 @@ func (w *walker) walk(path string, typ os.FileMode) error {
 			base == "testdata" || base == "node_modules" {
 			return filepath.SkipDir
 		}
+		// Ignore the "builtin" package
+		if base == "builtin" {
+			return filepath.SkipDir
+		}
 		if base == "v" || base == "mod" {
 			if _, ok := w.ignored[path]; ok {
 				return filepath.SkipDir
@@ -205,20 +233,6 @@ func (w *walker) walk(path string, typ os.FileMode) error {
 		}
 		if skipDir(w.importDir, path, base) {
 			return filepath.SkipDir
-		}
-		return nil
-	}
-	if typ == os.ModeSymlink {
-		base := filepath.Base(path)
-		if strings.HasPrefix(base, ".#") {
-			return nil
-		}
-		fi, err := os.Lstat(path)
-		if err != nil {
-			return nil
-		}
-		if shouldTraverse(dir, fi) {
-			return fastwalk.TraverseLink
 		}
 		return nil
 	}
@@ -302,44 +316,6 @@ func Walk(ctxt *build.Context, importDir string) ([]string, error) {
 		}
 	}
 
+	// TODO: sort paths
 	return paths, first
-}
-
-var visitedSymlinks struct {
-	sync.Mutex
-	m map[string]struct{}
-}
-
-func shouldTraverse(dir string, fi os.FileInfo) bool {
-	path := filepath.Join(dir, fi.Name())
-	target, err := filepath.EvalSymlinks(path)
-	if err != nil {
-		return false
-	}
-	ts, err := os.Stat(target)
-	if err != nil {
-		return false
-	}
-	if !ts.IsDir() {
-		return false
-	}
-	// CEV: removed 'func skipDir(fi os.FileInfo) bool'
-
-	realParent, err := filepath.EvalSymlinks(dir)
-	if err != nil {
-		return false
-	}
-	realPath := filepath.Join(realParent, fi.Name())
-
-	visitedSymlinks.Lock()
-	if visitedSymlinks.m == nil {
-		visitedSymlinks.m = make(map[string]struct{})
-	}
-	if _, ok := visitedSymlinks.m[realPath]; ok {
-		visitedSymlinks.Unlock()
-		return false
-	}
-	visitedSymlinks.m[realPath] = struct{}{}
-	visitedSymlinks.Unlock()
-	return true
 }
