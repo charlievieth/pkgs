@@ -118,7 +118,6 @@ func skipDir(importDir, path, base string) bool {
 	return importDir == "" || !strings.HasPrefix(importDir, dir)
 }
 
-// func(path string, d DirEntry, err error) error
 func (w *walker) walkPkg(path string, d fs.DirEntry, err error) error {
 	if err != nil {
 		return err
