@@ -126,6 +126,9 @@ func TestWalkGOPATH(t *testing.T) {
 		"p1/gen2.go":         "//go:build generate2\n\npackage main\n\nfunc main() { println(\"hello\") }\n",
 		"p1/testdata/t/t.go": "package t\n",
 		"p1/vendor/v1/v1.go": "package v1\n",
+
+		"tagged/tagged.go": "//go:build tagged\n\npackage tagged",
+
 		"p2/p2.go":           "package p2\n",
 		"p2/vendor/v2/v2.go": "package v2\n",
 	}
@@ -145,6 +148,7 @@ func TestWalkGOPATH(t *testing.T) {
 		"p1",
 		"p2",
 		"v1",
+		"tagged",
 	}
 	want = append(want, loadStdLibPkgs(t)...)
 	sort.Strings(want)
@@ -152,6 +156,7 @@ func TestWalkGOPATH(t *testing.T) {
 	importDir := filepath.Join(gopath, "src", "p1")
 	ctxt := build.Default
 	ctxt.GOPATH = gopath
+	ctxt.BuildTags = append(ctxt.BuildTags, "tagged")
 	got, err := Walk(&ctxt, importDir)
 	if err != nil {
 		t.Fatal(err)
