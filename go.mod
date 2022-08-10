@@ -3,9 +3,8 @@ module github.com/charlievieth/pkgs
 go 1.18
 
 require (
-	github.com/charlievieth/buildutil v0.0.14
+	github.com/charlievieth/buildutil v0.0.15
 	github.com/charlievieth/fastwalk v1.0.1
-	github.com/charlievieth/fs v0.0.3
 )
 
 require (
