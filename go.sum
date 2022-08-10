@@ -1,9 +1,7 @@
-github.com/charlievieth/buildutil v0.0.14 h1:hl+BEUVlgtfSmYL0WnqzZ04SEdoRM3fxh4B8cs2vuX8=
-github.com/charlievieth/buildutil v0.0.14/go.mod h1:DdeyrcvBqoVBAluu81KhpNLWO2M/SxrUB8KOc2SVo9s=
+github.com/charlievieth/buildutil v0.0.15 h1:MXZhpiyoxzztJE1uUaqn0hUqGLUzEMzV/QRaI/VVKPc=
+github.com/charlievieth/buildutil v0.0.15/go.mod h1:DdeyrcvBqoVBAluu81KhpNLWO2M/SxrUB8KOc2SVo9s=
 github.com/charlievieth/fastwalk v1.0.1 h1:jW01w8OCFdKS9JvAcnI+JHhWU/FuIEmNb24Ri9p7OVg=
 github.com/charlievieth/fastwalk v1.0.1/go.mod h1:dryXgMJyGHbMrAmmnF0/EJNBbZaihlwcNud5IuGyogU=
-github.com/charlievieth/fs v0.0.3 h1:3lZQXTj4PbE81CVPwALSn+JoyCNXkZgORHN6h2XHGlg=
-github.com/charlievieth/fs v0.0.3/go.mod h1:hD4sRzto1Hw8zCua76tNVKZxaeZZr1RiKftjAJQRLLo=
 github.com/charlievieth/reonce v1.2.1 h1:V3Heg6/muvguQwFb+T02+NMrragkDy/DgTgH3Z6ogXc=
 github.com/charlievieth/reonce v1.2.1/go.mod h1:QswnAAn98PFvVf5MG10T4JSE8R3LbmapTruRdiCf7XM=
 github.com/karrick/godirwalk v1.17.0 h1:b4kY7nqDdioR/6qnbHQyDvmA17u5G1cZ6J+CZXwSWoI=
