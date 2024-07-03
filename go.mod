@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/charlievieth/buildutil v0.0.15
-	github.com/charlievieth/fastwalk v1.0.4
+	github.com/charlievieth/fastwalk v1.0.6
 )
 
 require (

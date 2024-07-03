@@ -1,7 +1,7 @@
 github.com/charlievieth/buildutil v0.0.15 h1:MXZhpiyoxzztJE1uUaqn0hUqGLUzEMzV/QRaI/VVKPc=
 github.com/charlievieth/buildutil v0.0.15/go.mod h1:DdeyrcvBqoVBAluu81KhpNLWO2M/SxrUB8KOc2SVo9s=
-github.com/charlievieth/fastwalk v1.0.4 h1:EG3y5L1XBa8VftvpONuQlfe5sNuf1xzGpm59bdgCDwo=
-github.com/charlievieth/fastwalk v1.0.4/go.mod h1:JSfglY/gmL/rqsUS1NCsJTocB5n6sSl9ApAqif4CUbs=
+github.com/charlievieth/fastwalk v1.0.6 h1:C7nXgxQIjEkpKWT1fbXGFzQiblwqq2ZsxrR0ohh5IRs=
+github.com/charlievieth/fastwalk v1.0.6/go.mod h1:rV19+IF9Y2TYQNy4MqEk5M/spNHjKsA0i71yrsv2p4E=
 github.com/charlievieth/reonce v1.2.1 h1:V3Heg6/muvguQwFb+T02+NMrragkDy/DgTgH3Z6ogXc=
 github.com/charlievieth/reonce v1.2.1/go.mod h1:QswnAAn98PFvVf5MG10T4JSE8R3LbmapTruRdiCf7XM=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
